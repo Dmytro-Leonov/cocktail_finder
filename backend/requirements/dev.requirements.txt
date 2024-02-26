@@ -1,0 +1,3 @@
+-r prod.requirements.txt
+
+ruff==0.2.1

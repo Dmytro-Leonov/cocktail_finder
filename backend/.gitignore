@@ -1,0 +1,3 @@
+.envs/.env.fastapi
+.envs/.env.postgres
+__pycache__/
