@@ -1,12 +1,14 @@
 import os
 from typing import List, Literal
 
-from pydantic import AnyHttpUrl, PostgresDsn, field_validator
+from pydantic import AnyHttpUrl, PostgresDsn, field_validator, model_validator
 from pydantic_settings import BaseSettings
 
 
 class CoreConfig(BaseSettings):
     ENVIRONMENT: Literal["dev", "prod"]
+    IS_DEV: bool
+    IS_PROD: bool
     PROJECT_NAME: str = "Cocktail Finder"
     API_PREFIX: str = "/api"
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
@@ -31,6 +33,16 @@ class CoreConfig(BaseSettings):
     )
 
     ECHO_SQL: bool = os.getenv("ECHO_SQL", "false").lower() in ("true", "1")
+
+    @model_validator(mode="before")
+    def set_environment(cls, values):
+        if values["ENVIRONMENT"] == "dev":
+            values["IS_DEV"] = True
+            values["IS_PROD"] = False
+        else:
+            values["IS_DEV"] = False
+            values["IS_PROD"] = True
+        return values
 
 
 core_config = CoreConfig()
