@@ -7,6 +7,7 @@ from pydantic_settings import BaseSettings
 
 class CoreConfig(BaseSettings):
     ENVIRONMENT: Literal["dev", "prod"]
+    SECRET_KEY: str
     IS_DEV: bool
     IS_PROD: bool
     PROJECT_NAME: str = "Cocktail Finder"
@@ -14,7 +15,6 @@ class CoreConfig(BaseSettings):
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
-    @classmethod
     def assemble_cors_origins(cls, v: str | List[str]) -> List[str] | str:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
@@ -32,7 +32,7 @@ class CoreConfig(BaseSettings):
         )
     )
 
-    ECHO_SQL: bool = os.getenv("ECHO_SQL", "false").lower() in ("true", "1")
+    ECHO_SQL: bool = False
 
     @model_validator(mode="before")
     def set_environment(cls, values):
