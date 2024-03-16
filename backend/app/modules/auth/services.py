@@ -108,3 +108,37 @@ def create_jwt(*, data: dict, expires_delta: timedelta) -> str:
     )
 
     return created_jwt
+
+
+def create_access_token(*, user: User) -> str:
+    return create_jwt(
+        data={"user_id": user.id},
+        expires_delta=timedelta(seconds=auth_config.ACCESS_TOKEN_EXPIRE_SECONDS),
+    )
+
+
+def create_refresh_token(*, user: User) -> str:
+    return create_jwt(
+        data={"user_id": user.id},
+        expires_delta=timedelta(seconds=auth_config.REFRESH_TOKEN_EXPIRE_SECONDS),
+    )
+
+
+def set_access_token_cookie(response, *, access_token: str):
+    response.set_cookie(
+        "access_token",
+        access_token,
+        httponly=True,
+        secure=True,
+        max_age=auth_config.ACCESS_TOKEN_EXPIRE_SECONDS,
+    )
+
+
+def set_refresh_token_cookie(response, *, refresh_token: str):
+    response.set_cookie(
+        "refresh_token",
+        refresh_token,
+        httponly=True,
+        secure=True,
+        max_age=auth_config.REFRESH_TOKEN_EXPIRE_SECONDS,
+    )
