@@ -1,4 +1,4 @@
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from fastapi import HTTPException, status
 from fastapi.openapi.models import OAuthFlows
@@ -25,7 +25,7 @@ class OAuth2CookieJWT(OAuth2):
             auto_error=auto_error,
         )
 
-    async def __call__(self, request: Request) -> Optional[str]:
+    async def __call__(self, request: Request) -> str | None:
         access_token = request.cookies.get("access_token")
 
         if not access_token:

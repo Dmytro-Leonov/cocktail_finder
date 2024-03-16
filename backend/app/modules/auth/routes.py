@@ -5,14 +5,15 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.core.exceptions import PermissionDenied
 from app.db.dependencies import DBSessionDep
+from app.modules.auth.dependencies import CurrentUserByRefreshToken
 from app.modules.auth.exceptions import InvalidCredentials
 from app.modules.auth.security import check_password
 from app.modules.auth.services import (
-    get_user_by_username_or_email,
     create_access_token,
     create_refresh_token,
+    get_user_by_username_or_email,
     set_access_token_cookie,
-    set_refresh_token_cookie
+    set_refresh_token_cookie,
 )
 
 auth_router = router = APIRouter()
@@ -27,7 +28,7 @@ async def login_email_and_password(
     session: DBSessionDep,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     response: Response,
-):
+) -> None:
     user = await get_user_by_username_or_email(
         session, username_or_email=form_data.username
     )
@@ -53,6 +54,16 @@ async def login_email_and_password(
     status_code=status.HTTP_200_OK,
     description="Logout",
 )
-async def logout(response: Response):
+async def logout(response: Response) -> None:
     response.delete_cookie("access_token")
     response.delete_cookie("refresh_token")
+
+
+@router.post(
+    "/refresh",
+    status_code=status.HTTP_200_OK,
+    description="Refresh access token",
+)
+async def refresh(response: Response, user: CurrentUserByRefreshToken) -> None:
+    access_token = create_access_token(user=user)
+    set_access_token_cookie(response, access_token=access_token)

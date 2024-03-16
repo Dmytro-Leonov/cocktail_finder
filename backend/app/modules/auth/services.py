@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
-from typing import Annotated, Optional
+from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Request, Response
 from jose import JWTError, jwt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +13,6 @@ from app.db.models import User
 from app.modules.auth.config import auth_config
 from app.modules.auth.exceptions import (
     AuthorizationFailed,
-    AuthRequired,
     InvalidCredentials,
     InvalidToken,
 )
@@ -23,7 +22,7 @@ oauth2_scheme = OAuth2CookieJWT(
     tokenUrl="auth/login/username-or-email", auto_error=False
 )
 
-AccessTokenDep = Annotated[Optional[str], Depends(oauth2_scheme)]
+AccessTokenDep = Annotated[str | None, Depends(oauth2_scheme)]
 
 
 async def get_user_by_id(session: AsyncSession, *, user_id: int) -> User | None:
@@ -77,7 +76,7 @@ async def get_current_user(
 async def get_current_user_optional(
     session: DBSessionDep,
     access_token: AccessTokenDep,
-) -> Optional[User]:
+) -> User | None:
     if access_token:
         return await get_current_user(session, access_token=access_token)
 
@@ -89,7 +88,7 @@ async def get_current_admin(
     access_token: AccessTokenDep,
 ) -> User:
     if access_token is None:
-        raise AuthRequired()
+        raise NotAuthenticated()
 
     user = await get_current_user(session, access_token=access_token)
 
@@ -124,7 +123,7 @@ def create_refresh_token(*, user: User) -> str:
     )
 
 
-def set_access_token_cookie(response, *, access_token: str):
+def set_access_token_cookie(response: Response, *, access_token: str) -> None:
     response.set_cookie(
         "access_token",
         access_token,
@@ -134,7 +133,7 @@ def set_access_token_cookie(response, *, access_token: str):
     )
 
 
-def set_refresh_token_cookie(response, *, refresh_token: str):
+def set_refresh_token_cookie(response: Response, *, refresh_token: str) -> None:
     response.set_cookie(
         "refresh_token",
         refresh_token,
@@ -142,3 +141,11 @@ def set_refresh_token_cookie(response, *, refresh_token: str):
         secure=True,
         max_age=auth_config.REFRESH_TOKEN_EXPIRE_SECONDS,
     )
+
+
+async def get_current_user_by_refresh_token(
+    session: DBSessionDep, *, request: Request
+) -> str | None:
+    refresh_token = request.cookies.get("refresh_token")
+
+    return await get_current_user(session, access_token=refresh_token)

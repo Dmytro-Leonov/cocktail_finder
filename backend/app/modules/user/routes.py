@@ -12,5 +12,5 @@ user_router = router = APIRouter()
     response_model=UserMeOut,
     description="Get current user",
 )
-async def get_me(user: CurrentUser):
-    return user
+async def get_me(user: CurrentUser) -> UserMeOut:
+    return UserMeOut(**user)
