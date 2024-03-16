@@ -24,8 +24,11 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     lifespan=lifespan,
     title=core_config.PROJECT_NAME,
-    openapi_url=f"{core_config.API_PREFIX}/openapi.json",
+    openapi_url=(
+        f"{core_config.API_PREFIX}/openapi.json" if core_config.IS_DEV else None
+    ),
     generate_unique_id_function=custom_generate_unique_id,
+    docs_url=(f"{core_config.API_PREFIX}/docs" if core_config.IS_DEV else None),
 )
 
 # Set all CORS enabled origins
