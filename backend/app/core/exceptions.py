@@ -27,4 +27,4 @@ class BadRequest(DetailedHTTPException):
 
 class NotAuthenticated(DetailedHTTPException):
     STATUS_CODE = status.HTTP_401_UNAUTHORIZED
-    DETAIL = "User not authenticated"
+    DETAIL = "Not authenticated"
