@@ -23,6 +23,7 @@ auth_router = router = APIRouter()
     "/login/username-or-email",
     status_code=status.HTTP_200_OK,
     description="Login with email and password",
+    response_class=Response,
 )
 async def login_email_and_password(
     session: DBSessionDep,
@@ -53,6 +54,7 @@ async def login_email_and_password(
     "/logout",
     status_code=status.HTTP_200_OK,
     description="Logout",
+    response_class=Response,
 )
 async def logout(response: Response) -> None:
     response.delete_cookie("access_token")
@@ -63,6 +65,7 @@ async def logout(response: Response) -> None:
     "/refresh",
     status_code=status.HTTP_200_OK,
     description="Refresh access token",
+    response_class=Response,
 )
 async def refresh(response: Response, user: CurrentUserByRefreshToken) -> None:
     access_token = create_access_token(user=user)

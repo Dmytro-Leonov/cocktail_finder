@@ -5,8 +5,8 @@ from fastapi import Depends
 from app.modules.auth.services import (
     get_current_admin,
     get_current_user,
+    get_current_user_by_refresh_token,
     get_current_user_optional,
-    get_current_user_by_refresh_token
 )
 from app.modules.user.models import User
 
