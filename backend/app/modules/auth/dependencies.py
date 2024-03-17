@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import Depends
 
@@ -11,6 +11,6 @@ from app.modules.auth.services import (
 from app.modules.user.models import User
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
-CurrentUserOptional = Annotated[User | None, Depends(get_current_user_optional)]
+CurrentUserOptional = Annotated[Optional[User], Depends(get_current_user_optional)]
 CurrentUserAdmin = Annotated[User, Depends(get_current_admin)]
 CurrentUserByRefreshToken = Annotated[User, Depends(get_current_user_by_refresh_token)]

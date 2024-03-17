@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import Depends, Request, Response
 from jose import JWTError, jwt
@@ -22,10 +22,10 @@ oauth2_scheme = OAuth2CookieJWT(
     tokenUrl="auth/login/username-or-email", auto_error=False
 )
 
-AccessTokenDep = Annotated[str | None, Depends(oauth2_scheme)]
+AccessTokenDep = Annotated[Optional[str], Depends(oauth2_scheme)]
 
 
-async def get_user_by_id(session: AsyncSession, *, user_id: int) -> User | None:
+async def get_user_by_id(session: AsyncSession, *, user_id: int) -> Optional[User]:
     query = select(User).where(User.id == user_id)
     user = await session.scalar(query)
 
@@ -34,7 +34,7 @@ async def get_user_by_id(session: AsyncSession, *, user_id: int) -> User | None:
 
 async def get_user_by_username_or_email(
     session: AsyncSession, *, username_or_email: str
-) -> User | None:
+) -> Optional[User]:
     query = select(User).where(
         (User.email == username_or_email) | (User.username == username_or_email)
     )
@@ -56,7 +56,7 @@ async def get_current_user(
             core_config.SECRET_KEY,
             algorithms=auth_config.HASH_ALGORITHM,
         )
-        user_id: int | None = payload.get("user_id")
+        user_id: Optional[int] = payload.get("user_id")
         if user_id is None:
             raise InvalidToken()
     except JWTError:
@@ -76,7 +76,7 @@ async def get_current_user(
 async def get_current_user_optional(
     session: DBSessionDep,
     access_token: AccessTokenDep,
-) -> User | None:
+) -> Optional[User]:
     if access_token:
         return await get_current_user(session, access_token=access_token)
 
@@ -92,7 +92,7 @@ async def get_current_admin(
 
     user = await get_current_user(session, access_token=access_token)
 
-    if not user.is_admin:
+    if not user.is_superuser:
         raise AuthorizationFailed()
 
     return user
@@ -145,7 +145,7 @@ def set_refresh_token_cookie(response: Response, *, refresh_token: str) -> None:
 
 async def get_current_user_by_refresh_token(
     session: DBSessionDep, *, request: Request
-) -> str | None:
+) -> Optional[str]:
     refresh_token = request.cookies.get("refresh_token")
 
     return await get_current_user(session, access_token=refresh_token)
